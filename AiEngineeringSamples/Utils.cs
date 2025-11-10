@@ -4,11 +4,32 @@ using Microsoft.ML.Transforms.Text;
 
 namespace AiEngineeringSamples;
 
+/// <summary>
+/// Represents a document with text data.
+/// </summary>
+/// <param name="Text">The text content of the document.</param>
 internal record DocumentData(string Text);
-internal record DocumentVectors { [VectorType] public float[] Features { get; init; } = [0.0f];  }
+
+/// <summary>
+/// Represents a document with vectorized features.
+/// </summary>
+internal record DocumentVectors 
+{ 
+    /// <summary>
+    /// The vectorized features of the document.
+    /// </summary>
+    [VectorType] 
+    public float[] Features { get; init; } = [0.0f];  
+}
 
 internal static class Utils
 {
+    /// <summary>
+    /// Calculates the cosine similarity between two vectors.
+    /// </summary>
+    /// <param name="a">The first vector.</param>
+    /// <param name="b">The second vector.</param>
+    /// <returns>The cosine similarity as a float value.</returns>
     public static float CosineSimilarity(float[] a, float[] b)
     {
         double dot = 0, na = 0, nb = 0;
@@ -19,34 +40,51 @@ internal static class Utils
             nb += b[i] * b[i];
         }
         return (float)(dot / (Math.Sqrt(na) * Math.Sqrt(nb) + 1e-12));
-    }    
-    
+    }
+
+    /// <summary>
+    /// Tokenizes a given text into words and punctuation marks.
+    /// </summary>
+    /// <param name="text">The input text to tokenize.</param>
+    /// <returns>A list of tokens (words and punctuation).</returns>
     public static List<string> TokenizeWords(string text)
     {
-        // regex: captura palavras (letras/números) e pontuação individual
+        // regex: captures words (letters/numbers) and individual punctuation
         return Regex.Matches(text, @"\w+|[^\w\s]")
             .Cast<Match>()
             .Select(m => m.Value)
             .ToList();
     }
 
-    // equivalente a nltk.sent_tokenize
+    /// <summary>
+    /// Splits a given text into sentences.
+    /// </summary>
+    /// <param name="text">The input text to split.</param>
+    /// <returns>A list of sentences.</returns>
     public static List<string> TokenizeSentences(string text)
     {
-        // split por pontos de fim de sentença seguidos de espaço
+        // split by sentence-ending punctuation followed by a space
         return Regex.Split(text, @"(?<=[.!?])\s+")
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Select(s => s.Trim())
             .ToList();
     }
 
-    // equivalente a preprocess_text
+    /// <summary>
+    /// Preprocesses a given text by tokenizing and filtering out non-alphanumeric tokens.
+    /// </summary>
+    /// <param name="text">The input text to preprocess.</param>
+    /// <returns>A list of preprocessed tokens.</returns>
     public static List<string> PreprocessText(string text)
     {
         var tokens = TokenizeWords(text.ToLowerInvariant());
         return tokens.Where(word => word.All(char.IsLetterOrDigit)).ToList();
     }
 
+    /// <summary>
+    /// Retrieves stop words remover options for Portuguese (Brazil).
+    /// </summary>
+    /// <returns>An instance of <see cref="CustomStopWordsRemovingEstimator.Options"/> configured with Portuguese stop words.</returns>
     public static IStopWordsRemoverOptions GetStopWordsRemoverOptionsPtBr() =>
         new CustomStopWordsRemovingEstimator.Options
         {

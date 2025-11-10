@@ -4,6 +4,10 @@ namespace AiEngineeringSamples.SystemRetrieval;
 
 internal static class Tokenization01
 {
+    /// <summary>
+    /// Método principal demonstrando tokenização de palavras e sentenças, além de pré-processamento de texto.
+    /// Mimica funcionalidades similares ao uso de NLTK em Python
+    /// </summary>
     public static void Main()
     {
         var text = "Machine learning is fascinating. It enables computers to learn from data. Let's explore it! It's amazing.";

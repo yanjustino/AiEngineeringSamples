@@ -5,6 +5,10 @@ namespace AiEngineeringSamples.SystemRetrieval;
 
 internal static class Tokenization02
 {
+    /// <summary>
+    /// Método principal demonstrando pré-processamento de texto, vetorização TF-IDF e busca por similaridade.
+    /// Mimica funcionalidades similares ao uso de TF-IDF e busca por similaridade em Python
+    /// </summary>
     public static void Main()
     {
         var docs = new[]
@@ -33,6 +37,12 @@ internal static class Tokenization02
             Console.WriteLine($"Doc {idx} -> {sim:F4}: {docs[idx]}");        
     }
     
+    /// <summary>
+    /// Pré-processa os documentos, aplicando tokenização, remoção de stopwords e vetorização TF-IDF.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="docs"></param>
+    /// <returns></returns>
     private static (ITransformer Vectorizer, IDataView PreProcessedDocs) PreProcess(this MLContext context, DocumentData[] docs)
     {
         var estimator = GetTextFeaturizingEstimator(context);
@@ -41,6 +51,11 @@ internal static class Tokenization02
         return (transformer, transformer.Transform(data));
     }
 
+    /// <summary>
+    /// Retorna um estimador de featurização de texto com opções específicas para pré-processamento.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
     private static TextFeaturizingEstimator GetTextFeaturizingEstimator(MLContext context)
     {
         var options = new TextFeaturizingEstimator.Options
@@ -55,6 +70,12 @@ internal static class Tokenization02
         return context.Transforms.Text.FeaturizeText(outputColumnName: "Features", inputColumnNames: nameof(DocumentData.Text), options: options);
     }
 
+    /// <summary>
+    /// Retorna a matriz de vetores TF-IDF dos documentos pré-processados.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="preProcessedDocs"></param>
+    /// <returns></returns>
     private static float[][] GetVectors(this MLContext context, IDataView preProcessedDocs)
     {
         var vectors = context.Data.CreateEnumerable<DocumentVectors>(preProcessedDocs, reuseRowObject: false)
@@ -64,6 +85,14 @@ internal static class Tokenization02
         return vectors;
     }
 
+    /// <summary>
+    /// Retorna os documentos mais similares ao query usando vetores TF-IDF e similaridade cosseno.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="query"></param>
+    /// <param name="vectorizer"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
     private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, DocumentData[] query, ITransformer vectorizer, float[][] source)
     {
         var data = context.Data.LoadFromEnumerable(query);
