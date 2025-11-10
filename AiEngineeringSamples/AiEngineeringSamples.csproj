@@ -11,4 +11,10 @@
       <PackageReference Include="Microsoft.ML" Version="5.0.0-preview.25527.5" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="sw-ptbr.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

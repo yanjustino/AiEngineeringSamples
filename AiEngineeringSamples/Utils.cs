@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.ML.Data;
+using Microsoft.ML.Transforms.Text;
 
 namespace AiEngineeringSamples;
 
@@ -44,5 +45,11 @@ internal static class Utils
     {
         var tokens = TokenizeWords(text.ToLowerInvariant());
         return tokens.Where(word => word.All(char.IsLetterOrDigit)).ToList();
-    }    
+    }
+
+    public static IStopWordsRemoverOptions GetStopWordsRemoverOptionsPtBr() =>
+        new CustomStopWordsRemovingEstimator.Options
+        {
+            StopWords = File.ReadAllLines(Path.Combine(Environment.CurrentDirectory, "sw-ptbr.txt")),
+        };
 }

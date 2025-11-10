@@ -46,7 +46,7 @@ internal static class Tokenization02
         var options = new TextFeaturizingEstimator.Options
         {
             CaseMode = TextNormalizingEstimator.CaseMode.Lower,
-            StopWordsRemoverOptions = new StopWordsRemovingEstimator.Options(),
+            StopWordsRemoverOptions = Utils.GetStopWordsRemoverOptionsPtBr(),
             WordFeatureExtractor = new WordBagEstimator.Options { NgramLength = 1, UseAllLengths = false },
             // activate TF‑IDF internally
             Norm = TextFeaturizingEstimator.NormFunction.L2
