@@ -42,8 +42,7 @@ internal static class Tokenization02
     /// <param name="context"></param>
     /// <param name="docs"></param>
     /// <returns></returns>
-    private static (ITransformer Vectorizer, IDataView PreProcessedDocs) PreProcess(this MLContext context,
-        DocumentData[] docs)
+    private static (ITransformer Vectorizer, IDataView PreProcessedDocs) PreProcess(this MLContext context, DocumentData[] docs)
     {
         var estimator = GetTextFeaturizingEstimator(context);
         var data = context.Data.LoadFromEnumerable(docs);
@@ -67,8 +66,7 @@ internal static class Tokenization02
             Norm = TextFeaturizingEstimator.NormFunction.L2
         };
 
-        return context.Transforms.Text.FeaturizeText(outputColumnName: "Features",
-            inputColumnNames: nameof(DocumentData.Text), options: options);
+        return context.Transforms.Text.FeaturizeText(outputColumnName: "Features", inputColumnNames: nameof(DocumentData.Text), options: options);
     }
 
     /// <summary>
@@ -77,14 +75,10 @@ internal static class Tokenization02
     /// <param name="context"></param>
     /// <param name="preProcessedDocs"></param>
     /// <returns></returns>
-    private static float[][] GetVectors(this MLContext context, IDataView preProcessedDocs)
-    {
-        var vectors = context.Data.CreateEnumerable<DocumentVectors>(preProcessedDocs, reuseRowObject: false)
+    private static float[][] GetVectors(this MLContext context, IDataView preProcessedDocs) =>
+        context.Data.CreateEnumerable<DocumentVectors>(preProcessedDocs, reuseRowObject: false)
             .Select(f => f.Features)
             .ToArray();
-
-        return vectors;
-    }
 
     /// <summary>
     /// Retorna os documentos mais similares ao query usando vetores TF-IDF e similaridade cosseno.
@@ -94,8 +88,7 @@ internal static class Tokenization02
     /// <param name="vectorizer"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, DocumentData[] query,
-        ITransformer vectorizer, float[][] source)
+    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, DocumentData[] query, ITransformer vectorizer, float[][] source)
     {
         var data = context.Data.LoadFromEnumerable(query);
         var transform = vectorizer.Transform(data);
