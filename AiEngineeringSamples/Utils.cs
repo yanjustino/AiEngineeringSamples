@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.ML.Data;
 using Microsoft.ML.Transforms.Text;
+using static System.Text.RegularExpressions.Regex;
 
 namespace AiEngineeringSamples;
 
@@ -47,28 +48,23 @@ internal static class Utils
     /// </summary>
     /// <param name="text">The input text to tokenize.</param>
     /// <returns>A list of tokens (words and punctuation).</returns>
-    public static List<string> TokenizeWords(string text)
-    {
+    public static List<string> TokenizeWords(string text) =>
         // regex: captures words (letters/numbers) and individual punctuation
-        return Regex.Matches(text, @"\w+|[^\w\s]")
-            .Cast<Match>()
+        Matches(text, @"\w+|[^\w\s]")
             .Select(m => m.Value)
             .ToList();
-    }
 
     /// <summary>
     /// Splits a given text into sentences.
     /// </summary>
     /// <param name="text">The input text to split.</param>
     /// <returns>A list of sentences.</returns>
-    public static List<string> TokenizeSentences(string text)
-    {
+    public static List<string> TokenizeSentences(string text) =>
         // split by sentence-ending punctuation followed by a space
-        return Regex.Split(text, @"(?<=[.!?])\s+")
+        Split(text, @"(?<=[.!?])\s+")
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Select(s => s.Trim())
             .ToList();
-    }
 
     /// <summary>
     /// Preprocesses a given text by tokenizing and filtering out non-alphanumeric tokens.
