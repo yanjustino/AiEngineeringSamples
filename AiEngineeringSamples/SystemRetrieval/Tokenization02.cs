@@ -3,23 +3,29 @@ using Microsoft.ML.Transforms.Text;
 
 namespace AiEngineeringSamples.SystemRetrieval;
 
-internal static class Tokenization01
-{
-    public static void Main(DocumentData[] docs)
-    {
-        var ml = new MLContext();
-     
-    }    
-}
-
 internal static class Tokenization02
 {
-    public static void Main(DocumentData[] docs)
+    public static void Main()
     {
-        var ml = new MLContext();
-        var pipeline = ml.PreProcess(docs);
-        var features = ml.GetMatrix(pipeline.PreProcessedDocs);
-        var sims = ml.SearchTfidf(pipeline.Vectorizer, features).ToArray();
+        var docs = new[]
+        {
+            new DocumentData("Machine learning é um campo da inteligência artificial que permite que computadores aprendam padrões a partir de dados."),
+            new DocumentData("O aprendizado de máquina dá aos sistemas a capacidade de melhorar seu desempenho sem serem explicitamente programados."),
+            new DocumentData("Em vez de seguir apenas regras fixas, o machine learning descobre relações escondidas nos dados."),
+            new DocumentData("Esse campo combina estatística, algoritmos e poder computacional para extrair conhecimento."),
+            new DocumentData("O objetivo é criar modelos capazes de generalizar além dos exemplos vistos no treinamento."),
+            new DocumentData("Aplicações de machine learning vão desde recomendações de filmes até diagnósticos médicos."),
+            new DocumentData("Os algoritmos de aprendizado de máquina transformam dados brutos em previsões úteis."),
+            new DocumentData("Diferente de um software tradicional, o ML adapta-se conforme novos dados chegam."),
+            new DocumentData("O aprendizado pode ser supervisionado, não supervisionado ou por reforço, dependendo do tipo de problema."),
+            new DocumentData("Na prática, machine learning é o motor que impulsiona muitos avanços em visão computacional e processamento de linguagem natural."),
+            new DocumentData("Mais do que encontrar padrões, o machine learning ajuda a tomar decisões baseadas em evidências."),
+        };        
+        
+        var context = new MLContext();
+        var (vectorizer, processedDocs) = context.PreProcess(docs);
+        var vectors = context.GetVectors(processedDocs);
+        var sims = context.SearchTfidf(vectorizer, vectors).ToArray();
 
         Console.WriteLine($"Top for query: \"machine learning\"");
         foreach (var (idx, sim) in sims.Take(10))
@@ -27,6 +33,14 @@ internal static class Tokenization02
     }
     
     private static (ITransformer Vectorizer, IDataView PreProcessedDocs) PreProcess(this MLContext context, DocumentData[] docs)
+    {
+        var estimator = GetTextFeaturizingEstimator(context);
+        var data = context.Data.LoadFromEnumerable(docs);
+        var transformer = estimator.Fit(data);
+        return (transformer, transformer.Transform(data));
+    }
+
+    private static TextFeaturizingEstimator GetTextFeaturizingEstimator(MLContext context)
     {
         var options = new TextFeaturizingEstimator.Options
         {
@@ -37,15 +51,10 @@ internal static class Tokenization02
             Norm = TextFeaturizingEstimator.NormFunction.L2
         };
 
-        var estimator = context.Transforms.Text.FeaturizeText(outputColumnName: "Features",
-            inputColumnNames: nameof(DocumentData.Text), options: options);
-        
-        var data = context.Data.LoadFromEnumerable(docs);
-        var transformer = estimator.Fit(data);
-        return (transformer, transformer.Transform(data));
+        return context.Transforms.Text.FeaturizeText(outputColumnName: "Features", inputColumnNames: nameof(DocumentData.Text), options: options);
     }
 
-    private static float[][] GetMatrix(this MLContext context, IDataView preProcessedDocs)
+    private static float[][] GetVectors(this MLContext context, IDataView preProcessedDocs)
     {
         var vectors = context.Data.CreateEnumerable<DocumentVectors>(preProcessedDocs, reuseRowObject: false)
             .Select(f => f.Features)
@@ -54,14 +63,14 @@ internal static class Tokenization02
         return vectors;
     }
 
-    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, ITransformer vectorizer, float[][] vectors)
+    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, ITransformer vectorizer, float[][] source)
     {
         var query = new[] { new DocumentData("machine learning") };
         var data = context.Data.LoadFromEnumerable(query);
         var transform = vectorizer.Transform(data);
-        var qFeat = context.Data.CreateEnumerable<DocumentVectors>(transform, reuseRowObject:false).First().Features;
+        var vectors = context.Data.CreateEnumerable<DocumentVectors>(transform, reuseRowObject:false).First().Features;
 
-        return vectors.Select((v, idx) => (idx, sim: Utils.CosineSimilarity(v, qFeat)))
+        return source.Select((v, idx) => (idx, sim: Utils.CosineSimilarity(v, vectors)))
             .OrderByDescending(x => x.sim)
             .ToArray();
     }
