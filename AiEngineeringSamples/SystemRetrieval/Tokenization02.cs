@@ -25,7 +25,8 @@ internal static class Tokenization02
         var context = new MLContext();
         var (vectorizer, processedDocs) = context.PreProcess(docs);
         var vectors = context.GetVectors(processedDocs);
-        var sims = context.SearchTfidf(vectorizer, vectors).ToArray();
+        var query = new[] { new DocumentData("machine learning") };
+        var sims = context.SearchTfidf(query, vectorizer, vectors).ToArray();
 
         Console.WriteLine($"Top for query: \"machine learning\"");
         foreach (var (idx, sim) in sims.Take(10))
@@ -63,9 +64,8 @@ internal static class Tokenization02
         return vectors;
     }
 
-    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, ITransformer vectorizer, float[][] source)
+    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, DocumentData[] query, ITransformer vectorizer, float[][] source)
     {
-        var query = new[] { new DocumentData("machine learning") };
         var data = context.Data.LoadFromEnumerable(query);
         var transform = vectorizer.Transform(data);
         var vectors = context.Data.CreateEnumerable<DocumentVectors>(transform, reuseRowObject:false).First().Features;
