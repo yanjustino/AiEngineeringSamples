@@ -5,45 +5,45 @@ namespace AiEngineeringSamples.SystemRetrieval;
 
 internal static class Tokenization02
 {
+    private static readonly DocumentData[] Docs =
+    [
+        new ("Machine learning é um campo da inteligência artificial que permite que computadores aprendam padrões a partir de dados."),
+        new ("O aprendizado de máquina dá aos sistemas a capacidade de melhorar seu desempenho sem serem explicitamente programados."),
+        new ("Em vez de seguir apenas regras fixas, o machine learning descobre relações escondidas nos dados."),
+        new ("Esse campo combina estatística, algoritmos e poder computacional para extrair conhecimento."),
+        new ("O objetivo é criar modelos capazes de generalizar além dos exemplos vistos no treinamento."),
+        new ("Aplicações de machine learning vão desde recomendações de filmes até diagnósticos médicos."),
+        new ("Os algoritmos de aprendizado de máquina transformam dados brutos em previsões úteis."),
+        new ("Diferente de um software tradicional, o ML adapta-se conforme novos dados chegam."),
+        new ("O aprendizado pode ser supervisionado, não supervisionado ou por reforço, dependendo do tipo de problema."),
+        new ("Na prática, machine learning é o motor que impulsiona muitos avanços em visão computacional e processamento de linguagem natural."),
+        new ("Mais do que encontrar padrões, o machine learning ajuda a tomar decisões baseadas em evidências.")
+    ];    
+    
     /// <summary>
     /// Método principal demonstrando pré-processamento de texto, vetorização TF-IDF e busca por similaridade.
     /// Mimica funcionalidades similares ao uso de TF-IDF e busca por similaridade em Python
     /// </summary>
     public static void Main()
     {
-        var docs = new[]
-        {
-            new DocumentData("Machine learning é um campo da inteligência artificial que permite que computadores aprendam padrões a partir de dados."),
-            new DocumentData("O aprendizado de máquina dá aos sistemas a capacidade de melhorar seu desempenho sem serem explicitamente programados."),
-            new DocumentData("Em vez de seguir apenas regras fixas, o machine learning descobre relações escondidas nos dados."),
-            new DocumentData("Esse campo combina estatística, algoritmos e poder computacional para extrair conhecimento."),
-            new DocumentData("O objetivo é criar modelos capazes de generalizar além dos exemplos vistos no treinamento."),
-            new DocumentData("Aplicações de machine learning vão desde recomendações de filmes até diagnósticos médicos."),
-            new DocumentData("Os algoritmos de aprendizado de máquina transformam dados brutos em previsões úteis."),
-            new DocumentData("Diferente de um software tradicional, o ML adapta-se conforme novos dados chegam."),
-            new DocumentData("O aprendizado pode ser supervisionado, não supervisionado ou por reforço, dependendo do tipo de problema."),
-            new DocumentData("Na prática, machine learning é o motor que impulsiona muitos avanços em visão computacional e processamento de linguagem natural."),
-            new DocumentData("Mais do que encontrar padrões, o machine learning ajuda a tomar decisões baseadas em evidências."),
-        };        
-        
         var context = new MLContext();
-        var (vectorizer, processedDocs) = context.PreProcess(docs);
+        var (vectorizer, processedDocs) = context.PreProcess(Docs);
         var vectors = context.GetVectors(processedDocs);
-        var query = new[] { new DocumentData("machine learning") };
-        var sims = context.SearchTfidf(query, vectorizer, vectors).ToArray();
+        var sims = context.SearchTfidf([new DocumentData("machine learning")], vectorizer, vectors).ToArray();
 
         Console.WriteLine($"Top for query: \"machine learning\"");
         foreach (var (idx, sim) in sims.Take(10))
-            Console.WriteLine($"Doc {idx} -> {sim:F4}: {docs[idx]}");        
+            Console.WriteLine($"Doc {idx:00} -> {sim:F4}: {Docs[idx]}");
     }
-    
+
     /// <summary>
     /// Pré-processa os documentos, aplicando tokenização, remoção de stopwords e vetorização TF-IDF.
     /// </summary>
     /// <param name="context"></param>
     /// <param name="docs"></param>
     /// <returns></returns>
-    private static (ITransformer Vectorizer, IDataView PreProcessedDocs) PreProcess(this MLContext context, DocumentData[] docs)
+    private static (ITransformer Vectorizer, IDataView PreProcessedDocs) PreProcess(this MLContext context,
+        DocumentData[] docs)
     {
         var estimator = GetTextFeaturizingEstimator(context);
         var data = context.Data.LoadFromEnumerable(docs);
@@ -67,7 +67,8 @@ internal static class Tokenization02
             Norm = TextFeaturizingEstimator.NormFunction.L2
         };
 
-        return context.Transforms.Text.FeaturizeText(outputColumnName: "Features", inputColumnNames: nameof(DocumentData.Text), options: options);
+        return context.Transforms.Text.FeaturizeText(outputColumnName: "Features",
+            inputColumnNames: nameof(DocumentData.Text), options: options);
     }
 
     /// <summary>
@@ -93,11 +94,12 @@ internal static class Tokenization02
     /// <param name="vectorizer"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, DocumentData[] query, ITransformer vectorizer, float[][] source)
+    private static IEnumerable<(int idx, float sim)> SearchTfidf(this MLContext context, DocumentData[] query,
+        ITransformer vectorizer, float[][] source)
     {
         var data = context.Data.LoadFromEnumerable(query);
         var transform = vectorizer.Transform(data);
-        var vectors = context.Data.CreateEnumerable<DocumentVectors>(transform, reuseRowObject:false).First().Features;
+        var vectors = context.Data.CreateEnumerable<DocumentVectors>(transform, reuseRowObject: false).First().Features;
 
         return source.Select((v, idx) => (idx, sim: Utils.CosineSimilarity(v, vectors)))
             .OrderByDescending(x => x.sim)
