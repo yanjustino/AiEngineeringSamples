@@ -29,7 +29,7 @@ internal static class Tokenization02
         var context = new MLContext();
         var (vectorizer, processedDocs) = context.PreProcess(Docs);
         var vectors = context.GetVectors(processedDocs);
-        var sims = context.SearchTfidf([new DocumentData("machine learning")], vectorizer, vectors).ToArray();
+        var sims = context.SearchTfidf([new ("machine learning")], vectorizer, vectors).ToArray();
 
         Console.WriteLine($"Top for query: \"machine learning\"");
         foreach (var (idx, sim) in sims.Take(10))
